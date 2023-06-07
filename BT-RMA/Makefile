@@ -5,7 +5,6 @@ VEC=
 
 include ../config/make.def
 
-
 OBJS = bt.o bt_data.o make_set.o initialize.o exact_solution.o \
        exact_rhs.o set_constants.o adi.o define.o copy_faces.o \
        rhs.o solve_subs.o x_solve$(VEC).o y_solve$(VEC).o z_solve$(VEC).o \
@@ -56,7 +55,7 @@ bt-epio: ${OBJS} epio.o btio_common.o
 	${FLINK} ${FLINKFLAGS} -o ${PROGRAM}.ep_io ${OBJS} btio_common.o epio.o ${FMPI_LIB}
 
 .f90.o:
-	${FCOMPILE} $<
+	${FCOMPILE} ${SYNCTYPE} -cpp $<
 
 .c.o:
 	${CCOMPILE} $<

@@ -75,9 +75,11 @@
 !---------------------------------------------------------------------
 !     wait for completion
 !---------------------------------------------------------------------
+#if defined(SOLVER_FENCE)
             call mpi_win_fence(0, win_solve, error)
-            ! call mpi_wait(send_id,r_status,error)
-            ! call mpi_wait(recv_id,r_status,error)
+#else
+            call mpi_win_wait(win_solve, error)
+#endif
             if (timeron) call timer_stop(t_xcomm)
 !---------------------------------------------------------------------
 !     install C'(istart) and rhs'(istart) to be used in this cell
@@ -87,7 +89,11 @@
          endif
 
          if (last .eq. 0) then 
+#if defined(SOLVER_FENCE)
             call mpi_win_fence(0, win_solve, error)
+#else
+            call mpi_win_post(grp_pred(1), 0, win_solve, error)
+#endif
             call x_send_solve_info(send_id,c) 
          endif
       enddo
@@ -109,15 +115,21 @@
          else
             if (timeron) call timer_start(t_xcomm)
             call x_receive_backsub_info(recv_id,c)
+#if defined(SOLVER_FENCE)
             call mpi_win_fence(0, win_solve, error)
-            ! call mpi_wait(send_id,r_status,error)
-            ! call mpi_wait(recv_id,r_status,error)
+#else
+            call mpi_win_wait(win_solve, error)
+#endif
             if (timeron) call timer_stop(t_xcomm)
             call x_unpack_backsub_info(c)
             call x_backsubstitute(first,last,c)
          endif
          if (first .eq. 0) then 
+#if defined(SOLVER_FENCE)
             call mpi_win_fence(0, win_solve, error)
+#else
+            call mpi_win_post(grp_succ(1), 0, win_solve, error)
+#endif
             call x_send_backsub_info(send_id,c)
          endif
       enddo
@@ -219,13 +231,19 @@
 !     send buffer 
 !---------------------------------------------------------------------
       if (timeron) call timer_start(t_xcomm)
-   !    call mpi_isend(in_buffer, buffer_size,  &
-   !   &     dp_type, successor(1),  &
-   !   &     WEST+jp+kp*NCELLS, comm_solve,  &
-   !   &     send_id,error)
+      
+#if !defined(SOLVER_FENCE)
+      call mpi_win_start(grp_succ(1), 0, win_solve, error)
+#endif
+
       call mpi_put(in_buffer, buffer_size, dp_type, &
      &             successor(1), disp, buffer_size, dp_type, &
      &             win_solve, error)
+
+#if !defined(SOLVER_FENCE)
+     call mpi_win_complete(win_solve, error)
+#endif
+
       if (timeron) call timer_stop(t_xcomm)
 
       return
@@ -271,13 +289,19 @@
          enddo
       enddo
       if (timeron) call timer_start(t_xcomm)
-   !    call mpi_isend(in_buffer, buffer_size,  &
-   !   &     dp_type, predecessor(1),  &
-   !   &     EAST+jp+kp*NCELLS, comm_solve,  &
-   !   &     send_id,error)
+
+#if !defined(SOLVER_FENCE)
+      call mpi_win_start(grp_pred(1), 0, win_solve, error)
+#endif
+
       call mpi_put(in_buffer, buffer_size, dp_type, &
      &             predecessor(1), disp, buffer_size, dp_type, &
      &             win_solve, error)
+
+#if !defined(SOLVER_FENCE)
+     call mpi_win_complete(win_solve, error)
+#endif
+
       if (timeron) call timer_stop(t_xcomm)
 
       return

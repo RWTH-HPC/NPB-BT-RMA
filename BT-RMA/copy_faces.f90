@@ -21,17 +21,13 @@
       use mpinpb
 
       implicit none
-      
-      
-      integer win_test
-      integer test
-      integer test2
 
       integer i, j, k, c, m, requests(0:11), p0, p1,  &
      &     p2, p3, p4, p5, b_size(0:5), ss(0:5),  &
      &     error, statuses(MPI_STATUS_SIZE, 0:11)
 
      integer(kind=MPI_ADDRESS_KIND) sr(0:5), disp
+     parameter(disp=0)
 
 !---------------------------------------------------------------------
 !     exit immediately if there are no faces to be copied           
@@ -187,48 +183,14 @@
 
       
       if (timeron) call timer_start(t_exch)
-      
-      call mpi_irecv(in_buffer(sr(0)), b_size(0),  &
-     &     dp_type, successor(1), WEST,  &
-     &     comm_rhs, requests(0), error)
-      call mpi_irecv(in_buffer(sr(1)), b_size(1),  &
-     &     dp_type, predecessor(1), EAST,  &
-     &     comm_rhs, requests(1), error)
-      call mpi_irecv(in_buffer(sr(2)), b_size(2),  &
-     &     dp_type, successor(2), SOUTH,  &
-     &     comm_rhs, requests(2), error)
-      call mpi_irecv(in_buffer(sr(3)), b_size(3),  &
-     &     dp_type, predecessor(2), NORTH,  &
-     &     comm_rhs, requests(3), error)
-      call mpi_irecv(in_buffer(sr(4)), b_size(4),  &
-     &     dp_type, successor(3), BOTTOM,  &
-     &     comm_rhs, requests(4), error)
-      call mpi_irecv(in_buffer(sr(5)), b_size(5),  &
-     &     dp_type, predecessor(3), TOP,   &
-     &     comm_rhs, requests(5), error)
 
-      call mpi_isend(out_buffer(ss(0)), b_size(0),  &
-     &     dp_type, successor(1),   EAST,  &
-     &     comm_rhs, requests(6), error)
-      call mpi_isend(out_buffer(ss(1)), b_size(1),  &
-     &     dp_type, predecessor(1), WEST,  &
-     &     comm_rhs, requests(7), error)
-      call mpi_isend(out_buffer(ss(2)), b_size(2),  &
-     &     dp_type,successor(2),   NORTH,  &
-     &     comm_rhs, requests(8), error)
-      call mpi_isend(out_buffer(ss(3)), b_size(3),  &
-     &     dp_type,predecessor(2), SOUTH,  &
-     &     comm_rhs, requests(9), error)
-      call mpi_isend(out_buffer(ss(4)), b_size(4),  &
-     &     dp_type,successor(3),   TOP,  &
-     &     comm_rhs,   requests(10), error)
-      call mpi_isend(out_buffer(ss(5)), b_size(5),  &
-     &     dp_type,predecessor(3), BOTTOM,  &
-     &     comm_rhs,requests(11), error)
-
-      call mpi_waitall(12, requests, statuses, error)
-
-      call mpi_win_fence(0, win_rhs, error)    
+#if defined(EXCHG_FENCE) || defined(EXCHG_GATS_SINGLE)
+#if defined(EXCHG_FENCE)
+      call mpi_win_fence(0, win_rhs, error)
+#else
+      call mpi_win_post(grp_peer, 0, win_rhs, error)
+      call mpi_win_start(grp_peer, 0, win_rhs, error)
+#endif
       call mpi_put(out_buffer(ss(0)), b_size(0), dp_type, &
       &     successor(1), sr(1)-1, b_size(0), dp_type, &
       &     win_rhs, error)
@@ -246,9 +208,52 @@
      &     win_rhs, error)
       call mpi_put(out_buffer(ss(5)), b_size(5), dp_type, &
      &     predecessor(3), sr(4)-1, b_size(5), dp_type, &
-     &     win_rhs, error)
-     call mpi_win_fence(0, win_rhs, error)  
+     &     win_rhs, error) 
 
+#if defined(EXCHG_FENCE)
+
+     call mpi_win_fence(0, win_rhs, error)
+
+#else
+     call mpi_win_complete(win_rhs, error)
+     call mpi_win_wait(win_rhs, error)
+#endif
+
+#else
+     do i = 1, 3
+         call mpi_win_post(grp_pred(i), 0, win_rhs_succ(i), error)
+         call mpi_win_post(grp_succ(i), 0, win_rhs_pred(i), error)
+         call mpi_win_start(grp_succ(i), 0, win_rhs_succ(i), error)
+         call mpi_win_start(grp_pred(i), 0, win_rhs_pred(i), error)
+     end do
+
+     call mpi_put(out_buffer(ss(0)), b_size(0), dp_type, &
+    &     successor(1), disp, b_size(0), dp_type, & 
+    &     win_rhs_succ(1), error)
+     call mpi_put(out_buffer(ss(1)), b_size(1), dp_type, &
+    &     predecessor(1), disp, b_size(1), dp_type, &
+    &     win_rhs_pred(1), error)
+     call mpi_put(out_buffer(ss(2)), b_size(2), dp_type, &
+    &     successor(2), disp, b_size(2), dp_type, &
+    &     win_rhs_succ(2), error)
+     call mpi_put(out_buffer(ss(3)), b_size(3), dp_type, &
+    &     predecessor(2), disp, b_size(3), dp_type, &
+    &     win_rhs_pred(2), error)
+     call mpi_put(out_buffer(ss(4)), b_size(4), dp_type, &
+    &     successor(3), disp, b_size(4), dp_type, &
+    &     win_rhs_succ(3), error)
+     call mpi_put(out_buffer(ss(5)), b_size(5), dp_type, &
+    &     predecessor(3), disp, b_size(5), dp_type, &
+    &     win_rhs_pred(3), error)
+
+     do i = 1, 3
+         call mpi_win_complete(win_rhs_succ(i), error)
+         call mpi_win_complete(win_rhs_pred(i), error)
+         call mpi_win_wait(win_rhs_succ(i), error)
+         call mpi_win_wait(win_rhs_pred(i), error)
+     end do
+
+#endif
 
 
       if (timeron) call timer_stop(t_exch)

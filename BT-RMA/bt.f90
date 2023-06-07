@@ -145,8 +145,19 @@
      &           ' (', i0, ' active)')
  1006     format(' BTIO -- ', A, ' write interval: ', i3 /)
 
+#ifdef SOLVER_FENCE
  1007     format(' Solver  : FENCE')
+#else
+ 1007     format(' Solver  : GATS')
+#endif
+
+#ifdef EXCHG_FENCE
  1008     format(' Exchange: FENCE',/)
+#elif defined(EXCHG_GATS_SINGLE)
+ 1008     format(' Exchange: GATS (single window)',/)
+#else
+ 1008     format(' Exchange: GATS (multi window)',/) 
+#endif
 
        endif
 
