@@ -87,7 +87,7 @@
      &        start_send_east, start_send_south, start_send_north,  &
      &        start_send_bottom, start_send_top, start_recv_west,  &
      &        start_recv_east, start_recv_south, start_recv_north,  &
-     &        start_recv_bottom, start_recv_top
+     &        start_recv_bottom, start_recv_top, max_buf_size
 
       double precision tmp_block(5,5), b_inverse(5,5), tmp_vec(5)
 

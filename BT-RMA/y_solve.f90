@@ -22,9 +22,9 @@
       implicit none
 
       integer  &
-     &     c, jstart, stage,  &
-     &     first, last, recv_id, error, r_status(MPI_STATUS_SIZE),  &
-     &     isize,jsize,ksize,send_id
+      &     c, jstart, stage,  &
+      &     first, last, recv_id, error, r_status(MPI_STATUS_SIZE),  &
+      &     isize,jsize,ksize,send_id
 
       jstart = 0
 
@@ -62,7 +62,7 @@
 !---------------------------------------------------------------------
             first = 0
             if (timeron) call timer_start(t_ycomm)
-            call y_receive_solve_info(recv_id,c)
+            ! call y_receive_solve_info(recv_id,c)
 !---------------------------------------------------------------------
 !     overlap computations and communications
 !---------------------------------------------------------------------
@@ -110,7 +110,7 @@
             call y_backsubstitute(first, last,c)
          else
             if (timeron) call timer_start(t_ycomm)
-            call y_receive_backsub_info(recv_id,c)
+            ! call y_receive_backsub_info(recv_id,c)
 #if defined(SOLVER_FENCE)
             call mpi_win_fence(0, win_solve, error)
 #else
@@ -201,7 +201,7 @@
       ip = cell_coord(1,c) - 1
       kp = cell_coord(3,c) - 1
       buffer_size=MAX_CELL_DIM*MAX_CELL_DIM*  &
-     &     (BLOCK_SIZE*BLOCK_SIZE + BLOCK_SIZE)
+      &     (BLOCK_SIZE*BLOCK_SIZE + BLOCK_SIZE)
 
 !---------------------------------------------------------------------
 !     pack up buffer
@@ -232,11 +232,11 @@
 #endif
 
       call mpi_put(in_buffer, buffer_size, dp_type, &
-     &             successor(2), disp, buffer_size, dp_type, &
-     &             win_solve, error)
+      &             successor(2), disp, buffer_size, dp_type, &
+      &             win_solve, error)
 
 #if !defined(SOLVER_FENCE)
-     call mpi_win_complete(win_solve, error)
+      call mpi_win_complete(win_solve, error)
 #endif
 
       if (timeron) call timer_stop(t_ycomm)
@@ -289,11 +289,11 @@
 #endif
 
       call mpi_put(in_buffer, buffer_size, dp_type, &
-     &             predecessor(2), disp, buffer_size, dp_type, &
-     &             win_solve, error)
+      &             predecessor(2), disp, buffer_size, dp_type, &
+      &             win_solve, error)
 
 #if !defined(SOLVER_FENCE)
-     call mpi_win_complete(win_solve, error)
+      call mpi_win_complete(win_solve, error)
 #endif
 
       if (timeron) call timer_stop(t_ycomm)
@@ -354,9 +354,9 @@
       kp = cell_coord(3,c) - 1
       buffer_size=MAX_CELL_DIM*MAX_CELL_DIM*BLOCK_SIZE
       call mpi_irecv(out_buffer, buffer_size,  &
-     &     dp_type, successor(2),  &
-     &     NORTH+ip+kp*NCELLS, comm_solve,  &
-     &     recv_id, error)
+      &     dp_type, successor(2),  &
+      &     NORTH+ip+kp*NCELLS, comm_solve,  &
+      &     recv_id, error)
       return
       end
 
@@ -382,11 +382,11 @@
       ip = cell_coord(1,c) - 1
       kp = cell_coord(3,c) - 1
       buffer_size=MAX_CELL_DIM*MAX_CELL_DIM*  &
-     &     (BLOCK_SIZE*BLOCK_SIZE + BLOCK_SIZE)
+      &     (BLOCK_SIZE*BLOCK_SIZE + BLOCK_SIZE)
       call mpi_irecv(out_buffer, buffer_size,  &
-     &     dp_type, predecessor(2),  &
-     &     SOUTH+ip+kp*NCELLS,  comm_solve,  &
-     &     recv_id, error)
+      &     dp_type, predecessor(2),  &
+      &     SOUTH+ip+kp*NCELLS,  comm_solve,  &
+      &     recv_id, error)
 
       return
       end
@@ -425,8 +425,8 @@
                do m=1,BLOCK_SIZE
                   do n=1,BLOCK_SIZE
                      rhs(m,i,jsize,k,c) = rhs(m,i,jsize,k,c)  &
-     &                    - lhsc(m,n,i,jsize,k,c)*  &
-     &                    backsub_info(n,i,k,c)
+      &                    - lhsc(m,n,i,jsize,k,c)*  &
+      &                    backsub_info(n,i,k,c)
                   enddo
                enddo
             enddo
@@ -438,7 +438,7 @@
                do m=1,BLOCK_SIZE
                   do n=1,BLOCK_SIZE
                      rhs(m,i,j,k,c) = rhs(m,i,j,k,c)  &
-     &                    - lhsc(m,n,i,j,k,c)*rhs(n,i,j+1,k,c)
+      &                    - lhsc(m,n,i,j,k,c)*rhs(n,i,j+1,k,c)
                   enddo
                enddo
             enddo
@@ -514,37 +514,37 @@
                fjac(1,5,j) = 0.0d+00
 
                fjac(2,1,j) = - ( utmp(2,j)*utmp(3,j) )  &
-     &              * tmp2
+      &              * tmp2
                fjac(2,2,j) = utmp(3,j) * tmp1
                fjac(2,3,j) = utmp(2,j) * tmp1
                fjac(2,4,j) = 0.0d+00
                fjac(2,5,j) = 0.0d+00
 
                fjac(3,1,j) = - ( utmp(3,j)*utmp(3,j)*tmp2)  &
-     &              + c2 * utmp(6,j)
+      &              + c2 * utmp(6,j)
                fjac(3,2,j) = - c2 *  utmp(2,j) * tmp1
                fjac(3,3,j) = ( 2.0d+00 - c2 )  &
-     &              *  utmp(3,j) * tmp1 
+      &              *  utmp(3,j) * tmp1 
                fjac(3,4,j) = - c2 * utmp(4,j) * tmp1 
                fjac(3,5,j) = c2
 
                fjac(4,1,j) = - ( utmp(3,j)*utmp(4,j) )  &
-     &              * tmp2
+      &              * tmp2
                fjac(4,2,j) = 0.0d+00
                fjac(4,3,j) = utmp(4,j) * tmp1
                fjac(4,4,j) = utmp(3,j) * tmp1
                fjac(4,5,j) = 0.0d+00
 
                fjac(5,1,j) = ( c2 * 2.0d0 * utmp(6,j)  &
-     &              - c1 * utmp(5,j) * tmp1 )  &
-     &              * utmp(3,j) * tmp1 
+      &              - c1 * utmp(5,j) * tmp1 )  &
+      &              * utmp(3,j) * tmp1 
                fjac(5,2,j) = - c2 * utmp(2,j)*utmp(3,j)  &
-     &              * tmp2
+      &              * tmp2
                fjac(5,3,j) = c1 * utmp(5,j) * tmp1  &
-     &              - c2 * ( utmp(6,j)  &
-     &              + utmp(3,j)*utmp(3,j) * tmp2 )
+      &              - c2 * ( utmp(6,j)  &
+      &              + utmp(3,j)*utmp(3,j) * tmp2 )
                fjac(5,4,j) = - c2 * ( utmp(3,j)*utmp(4,j) )  &
-     &              * tmp2
+      &              * tmp2
                fjac(5,5,j) = c1 * utmp(3,j) * tmp1 
 
                njac(1,1,j) = 0.0d+00
@@ -572,15 +572,15 @@
                njac(4,5,j) =   0.0d+00
 
                njac(5,1,j) = - (  c3c4  &
-     &              - c1345 ) * tmp3 * (utmp(2,j)**2)  &
-     &              - ( con43 * c3c4  &
-     &              - c1345 ) * tmp3 * (utmp(3,j)**2)  &
-     &              - ( c3c4 - c1345 ) * tmp3 * (utmp(4,j)**2)  &
-     &              - c1345 * tmp2 * utmp(5,j)
+      &              - c1345 ) * tmp3 * (utmp(2,j)**2)  &
+      &              - ( con43 * c3c4  &
+      &              - c1345 ) * tmp3 * (utmp(3,j)**2)  &
+      &              - ( c3c4 - c1345 ) * tmp3 * (utmp(4,j)**2)  &
+      &              - c1345 * tmp2 * utmp(5,j)
 
                njac(5,2,j) = (  c3c4 - c1345 ) * tmp2 * utmp(2,j)
                njac(5,3,j) = ( con43 * c3c4  &
-     &              - c1345 ) * tmp2 * utmp(3,j)
+      &              - c1345 ) * tmp2 * utmp(3,j)
                njac(5,4,j) = ( c3c4 - c1345 ) * tmp2 * utmp(4,j)
                njac(5,5,j) = ( c1345 ) * tmp1
 
@@ -595,68 +595,68 @@
                tmp2 = dt * ty2
 
                lhsa(1,1,j) = - tmp2 * fjac(1,1,j-1)  &
-     &              - tmp1 * njac(1,1,j-1)  &
-     &              - tmp1 * dy1 
+      &              - tmp1 * njac(1,1,j-1)  &
+      &              - tmp1 * dy1 
                lhsa(1,2,j) = - tmp2 * fjac(1,2,j-1)  &
-     &              - tmp1 * njac(1,2,j-1)
+      &              - tmp1 * njac(1,2,j-1)
                lhsa(1,3,j) = - tmp2 * fjac(1,3,j-1)  &
-     &              - tmp1 * njac(1,3,j-1)
+      &              - tmp1 * njac(1,3,j-1)
                lhsa(1,4,j) = - tmp2 * fjac(1,4,j-1)  &
-     &              - tmp1 * njac(1,4,j-1)
+      &              - tmp1 * njac(1,4,j-1)
                lhsa(1,5,j) = - tmp2 * fjac(1,5,j-1)  &
-     &              - tmp1 * njac(1,5,j-1)
+      &              - tmp1 * njac(1,5,j-1)
 
                lhsa(2,1,j) = - tmp2 * fjac(2,1,j-1)  &
-     &              - tmp1 * njac(2,1,j-1)
+      &              - tmp1 * njac(2,1,j-1)
                lhsa(2,2,j) = - tmp2 * fjac(2,2,j-1)  &
-     &              - tmp1 * njac(2,2,j-1)  &
-     &              - tmp1 * dy2
+      &              - tmp1 * njac(2,2,j-1)  &
+      &              - tmp1 * dy2
                lhsa(2,3,j) = - tmp2 * fjac(2,3,j-1)  &
-     &              - tmp1 * njac(2,3,j-1)
+      &              - tmp1 * njac(2,3,j-1)
                lhsa(2,4,j) = - tmp2 * fjac(2,4,j-1)  &
-     &              - tmp1 * njac(2,4,j-1)
+      &              - tmp1 * njac(2,4,j-1)
                lhsa(2,5,j) = - tmp2 * fjac(2,5,j-1)  &
-     &              - tmp1 * njac(2,5,j-1)
+      &              - tmp1 * njac(2,5,j-1)
 
                lhsa(3,1,j) = - tmp2 * fjac(3,1,j-1)  &
-     &              - tmp1 * njac(3,1,j-1)
+      &              - tmp1 * njac(3,1,j-1)
                lhsa(3,2,j) = - tmp2 * fjac(3,2,j-1)  &
-     &              - tmp1 * njac(3,2,j-1)
+      &              - tmp1 * njac(3,2,j-1)
                lhsa(3,3,j) = - tmp2 * fjac(3,3,j-1)  &
-     &              - tmp1 * njac(3,3,j-1)  &
-     &              - tmp1 * dy3 
+      &              - tmp1 * njac(3,3,j-1)  &
+      &              - tmp1 * dy3 
                lhsa(3,4,j) = - tmp2 * fjac(3,4,j-1)  &
-     &              - tmp1 * njac(3,4,j-1)
+      &              - tmp1 * njac(3,4,j-1)
                lhsa(3,5,j) = - tmp2 * fjac(3,5,j-1)  &
-     &              - tmp1 * njac(3,5,j-1)
+      &              - tmp1 * njac(3,5,j-1)
 
                lhsa(4,1,j) = - tmp2 * fjac(4,1,j-1)  &
-     &              - tmp1 * njac(4,1,j-1)
+      &              - tmp1 * njac(4,1,j-1)
                lhsa(4,2,j) = - tmp2 * fjac(4,2,j-1)  &
-     &              - tmp1 * njac(4,2,j-1)
+      &              - tmp1 * njac(4,2,j-1)
                lhsa(4,3,j) = - tmp2 * fjac(4,3,j-1)  &
-     &              - tmp1 * njac(4,3,j-1)
+      &              - tmp1 * njac(4,3,j-1)
                lhsa(4,4,j) = - tmp2 * fjac(4,4,j-1)  &
-     &              - tmp1 * njac(4,4,j-1)  &
-     &              - tmp1 * dy4
+      &              - tmp1 * njac(4,4,j-1)  &
+      &              - tmp1 * dy4
                lhsa(4,5,j) = - tmp2 * fjac(4,5,j-1)  &
-     &              - tmp1 * njac(4,5,j-1)
+      &              - tmp1 * njac(4,5,j-1)
 
                lhsa(5,1,j) = - tmp2 * fjac(5,1,j-1)  &
-     &              - tmp1 * njac(5,1,j-1)
+      &              - tmp1 * njac(5,1,j-1)
                lhsa(5,2,j) = - tmp2 * fjac(5,2,j-1)  &
-     &              - tmp1 * njac(5,2,j-1)
+      &              - tmp1 * njac(5,2,j-1)
                lhsa(5,3,j) = - tmp2 * fjac(5,3,j-1)  &
-     &              - tmp1 * njac(5,3,j-1)
+      &              - tmp1 * njac(5,3,j-1)
                lhsa(5,4,j) = - tmp2 * fjac(5,4,j-1)  &
-     &              - tmp1 * njac(5,4,j-1)
+      &              - tmp1 * njac(5,4,j-1)
                lhsa(5,5,j) = - tmp2 * fjac(5,5,j-1)  &
-     &              - tmp1 * njac(5,5,j-1)  &
-     &              - tmp1 * dy5
+      &              - tmp1 * njac(5,5,j-1)  &
+      &              - tmp1 * dy5
 
                lhsb(1,1,j) = 1.0d+00  &
-     &              + tmp1 * 2.0d+00 * njac(1,1,j)  &
-     &              + tmp1 * 2.0d+00 * dy1
+      &              + tmp1 * 2.0d+00 * njac(1,1,j)  &
+      &              + tmp1 * 2.0d+00 * dy1
                lhsb(1,2,j) = tmp1 * 2.0d+00 * njac(1,2,j)
                lhsb(1,3,j) = tmp1 * 2.0d+00 * njac(1,3,j)
                lhsb(1,4,j) = tmp1 * 2.0d+00 * njac(1,4,j)
@@ -664,8 +664,8 @@
 
                lhsb(2,1,j) = tmp1 * 2.0d+00 * njac(2,1,j)
                lhsb(2,2,j) = 1.0d+00  &
-     &              + tmp1 * 2.0d+00 * njac(2,2,j)  &
-     &              + tmp1 * 2.0d+00 * dy2
+      &              + tmp1 * 2.0d+00 * njac(2,2,j)  &
+      &              + tmp1 * 2.0d+00 * dy2
                lhsb(2,3,j) = tmp1 * 2.0d+00 * njac(2,3,j)
                lhsb(2,4,j) = tmp1 * 2.0d+00 * njac(2,4,j)
                lhsb(2,5,j) = tmp1 * 2.0d+00 * njac(2,5,j)
@@ -673,8 +673,8 @@
                lhsb(3,1,j) = tmp1 * 2.0d+00 * njac(3,1,j)
                lhsb(3,2,j) = tmp1 * 2.0d+00 * njac(3,2,j)
                lhsb(3,3,j) = 1.0d+00  &
-     &              + tmp1 * 2.0d+00 * njac(3,3,j)  &
-     &              + tmp1 * 2.0d+00 * dy3
+      &              + tmp1 * 2.0d+00 * njac(3,3,j)  &
+      &              + tmp1 * 2.0d+00 * dy3
                lhsb(3,4,j) = tmp1 * 2.0d+00 * njac(3,4,j)
                lhsb(3,5,j) = tmp1 * 2.0d+00 * njac(3,5,j)
 
@@ -682,8 +682,8 @@
                lhsb(4,2,j) = tmp1 * 2.0d+00 * njac(4,2,j)
                lhsb(4,3,j) = tmp1 * 2.0d+00 * njac(4,3,j)
                lhsb(4,4,j) = 1.0d+00  &
-     &              + tmp1 * 2.0d+00 * njac(4,4,j)  &
-     &              + tmp1 * 2.0d+00 * dy4
+      &              + tmp1 * 2.0d+00 * njac(4,4,j)  &
+      &              + tmp1 * 2.0d+00 * dy4
                lhsb(4,5,j) = tmp1 * 2.0d+00 * njac(4,5,j)
 
                lhsb(5,1,j) = tmp1 * 2.0d+00 * njac(5,1,j)
@@ -691,68 +691,68 @@
                lhsb(5,3,j) = tmp1 * 2.0d+00 * njac(5,3,j)
                lhsb(5,4,j) = tmp1 * 2.0d+00 * njac(5,4,j)
                lhsb(5,5,j) = 1.0d+00  &
-     &              + tmp1 * 2.0d+00 * njac(5,5,j)  &
-     &              + tmp1 * 2.0d+00 * dy5
+      &              + tmp1 * 2.0d+00 * njac(5,5,j)  &
+      &              + tmp1 * 2.0d+00 * dy5
 
                lhsc(1,1,i,j,k,c) =  tmp2 * fjac(1,1,j+1)  &
-     &              - tmp1 * njac(1,1,j+1)  &
-     &              - tmp1 * dy1
+      &              - tmp1 * njac(1,1,j+1)  &
+      &              - tmp1 * dy1
                lhsc(1,2,i,j,k,c) =  tmp2 * fjac(1,2,j+1)  &
-     &              - tmp1 * njac(1,2,j+1)
+      &              - tmp1 * njac(1,2,j+1)
                lhsc(1,3,i,j,k,c) =  tmp2 * fjac(1,3,j+1)  &
-     &              - tmp1 * njac(1,3,j+1)
+      &              - tmp1 * njac(1,3,j+1)
                lhsc(1,4,i,j,k,c) =  tmp2 * fjac(1,4,j+1)  &
-     &              - tmp1 * njac(1,4,j+1)
+      &              - tmp1 * njac(1,4,j+1)
                lhsc(1,5,i,j,k,c) =  tmp2 * fjac(1,5,j+1)  &
-     &              - tmp1 * njac(1,5,j+1)
+      &              - tmp1 * njac(1,5,j+1)
 
                lhsc(2,1,i,j,k,c) =  tmp2 * fjac(2,1,j+1)  &
-     &              - tmp1 * njac(2,1,j+1)
+      &              - tmp1 * njac(2,1,j+1)
                lhsc(2,2,i,j,k,c) =  tmp2 * fjac(2,2,j+1)  &
-     &              - tmp1 * njac(2,2,j+1)  &
-     &              - tmp1 * dy2
+      &              - tmp1 * njac(2,2,j+1)  &
+      &              - tmp1 * dy2
                lhsc(2,3,i,j,k,c) =  tmp2 * fjac(2,3,j+1)  &
-     &              - tmp1 * njac(2,3,j+1)
+      &              - tmp1 * njac(2,3,j+1)
                lhsc(2,4,i,j,k,c) =  tmp2 * fjac(2,4,j+1)  &
-     &              - tmp1 * njac(2,4,j+1)
+      &              - tmp1 * njac(2,4,j+1)
                lhsc(2,5,i,j,k,c) =  tmp2 * fjac(2,5,j+1)  &
-     &              - tmp1 * njac(2,5,j+1)
+      &              - tmp1 * njac(2,5,j+1)
 
                lhsc(3,1,i,j,k,c) =  tmp2 * fjac(3,1,j+1)  &
-     &              - tmp1 * njac(3,1,j+1)
+      &              - tmp1 * njac(3,1,j+1)
                lhsc(3,2,i,j,k,c) =  tmp2 * fjac(3,2,j+1)  &
-     &              - tmp1 * njac(3,2,j+1)
+      &              - tmp1 * njac(3,2,j+1)
                lhsc(3,3,i,j,k,c) =  tmp2 * fjac(3,3,j+1)  &
-     &              - tmp1 * njac(3,3,j+1)  &
-     &              - tmp1 * dy3
+      &              - tmp1 * njac(3,3,j+1)  &
+      &              - tmp1 * dy3
                lhsc(3,4,i,j,k,c) =  tmp2 * fjac(3,4,j+1)  &
-     &              - tmp1 * njac(3,4,j+1)
+      &              - tmp1 * njac(3,4,j+1)
                lhsc(3,5,i,j,k,c) =  tmp2 * fjac(3,5,j+1)  &
-     &              - tmp1 * njac(3,5,j+1)
+      &              - tmp1 * njac(3,5,j+1)
 
                lhsc(4,1,i,j,k,c) =  tmp2 * fjac(4,1,j+1)  &
-     &              - tmp1 * njac(4,1,j+1)
+      &              - tmp1 * njac(4,1,j+1)
                lhsc(4,2,i,j,k,c) =  tmp2 * fjac(4,2,j+1)  &
-     &              - tmp1 * njac(4,2,j+1)
+      &              - tmp1 * njac(4,2,j+1)
                lhsc(4,3,i,j,k,c) =  tmp2 * fjac(4,3,j+1)  &
-     &              - tmp1 * njac(4,3,j+1)
+      &              - tmp1 * njac(4,3,j+1)
                lhsc(4,4,i,j,k,c) =  tmp2 * fjac(4,4,j+1)  &
-     &              - tmp1 * njac(4,4,j+1)  &
-     &              - tmp1 * dy4
+      &              - tmp1 * njac(4,4,j+1)  &
+      &              - tmp1 * dy4
                lhsc(4,5,i,j,k,c) =  tmp2 * fjac(4,5,j+1)  &
-     &              - tmp1 * njac(4,5,j+1)
+      &              - tmp1 * njac(4,5,j+1)
 
                lhsc(5,1,i,j,k,c) =  tmp2 * fjac(5,1,j+1)  &
-     &              - tmp1 * njac(5,1,j+1)
+      &              - tmp1 * njac(5,1,j+1)
                lhsc(5,2,i,j,k,c) =  tmp2 * fjac(5,2,j+1)  &
-     &              - tmp1 * njac(5,2,j+1)
+      &              - tmp1 * njac(5,2,j+1)
                lhsc(5,3,i,j,k,c) =  tmp2 * fjac(5,3,j+1)  &
-     &              - tmp1 * njac(5,3,j+1)
+      &              - tmp1 * njac(5,3,j+1)
                lhsc(5,4,i,j,k,c) =  tmp2 * fjac(5,4,j+1)  &
-     &              - tmp1 * njac(5,4,j+1)
+      &              - tmp1 * njac(5,4,j+1)
                lhsc(5,5,i,j,k,c) =  tmp2 * fjac(5,5,j+1)  &
-     &              - tmp1 * njac(5,5,j+1)  &
-     &              - tmp1 * dy5
+      &              - tmp1 * njac(5,5,j+1)  &
+      &              - tmp1 * dy5
 
             enddo
 
@@ -767,8 +767,8 @@
 !     multiply rhs(jstart) by b_inverse(jstart) and copy to rhs
 !---------------------------------------------------------------------
                call binvcrhs( lhsb(1,1,jstart),  &
-     &                        lhsc(1,1,i,jstart,k,c),  &
-     &                        rhs(1,i,jstart,k,c) )
+      &                        lhsc(1,1,i,jstart,k,c),  &
+      &                        rhs(1,i,jstart,k,c) )
 
             endif
 
@@ -784,22 +784,22 @@
 !     rhs(j) = rhs(j) - A*rhs(j-1)
 !---------------------------------------------------------------------
                call matvec_sub(lhsa(1,1,j),  &
-     &                         rhs(1,i,j-1,k,c),rhs(1,i,j,k,c))
+      &                         rhs(1,i,j-1,k,c),rhs(1,i,j,k,c))
 
 !---------------------------------------------------------------------
 !     B(j) = B(j) - C(j-1)*A(j)
 !---------------------------------------------------------------------
                call matmul_sub(lhsa(1,1,j),  &
-     &                         lhsc(1,1,i,j-1,k,c),  &
-     &                         lhsb(1,1,j))
+      &                         lhsc(1,1,i,j-1,k,c),  &
+      &                         lhsb(1,1,j))
 
 !---------------------------------------------------------------------
 !     multiply c(i,j,k) by b_inverse and copy back to c
 !     multiply rhs(i,1,k) by b_inverse(i,1,k) and copy to rhs
 !---------------------------------------------------------------------
                call binvcrhs( lhsb(1,1,j),  &
-     &                        lhsc(1,1,i,j,k,c),  &
-     &                        rhs(1,i,j,k,c) )
+      &                        lhsc(1,1,i,j,k,c),  &
+      &                        rhs(1,i,j,k,c) )
 
             enddo
 
@@ -812,7 +812,7 @@
 !     rhs(jsize) = rhs(jsize) - A*rhs(jsize-1)
 !---------------------------------------------------------------------
                call matvec_sub(lhsa(1,1,jsize),  &
-     &                         rhs(1,i,jsize-1,k,c),rhs(1,i,jsize,k,c))
+      &                         rhs(1,i,jsize-1,k,c),rhs(1,i,jsize,k,c))
 
 !---------------------------------------------------------------------
 !     B(jsize) = B(jsize) - C(jsize-1)*A(jsize)
@@ -820,14 +820,14 @@
 !     $              cc,i,jsize-1,k,c,bb,i,jsize,k,c)
 !---------------------------------------------------------------------
                call matmul_sub(lhsa(1,1,jsize),  &
-     &                         lhsc(1,1,i,jsize-1,k,c),  &
-     &                         lhsb(1,1,jsize))
+      &                         lhsc(1,1,i,jsize-1,k,c),  &
+      &                         lhsb(1,1,jsize))
 
 !---------------------------------------------------------------------
 !     multiply rhs(jsize) by b_inverse(jsize) and copy to rhs
 !---------------------------------------------------------------------
                call binvrhs( lhsb(1,1,jsize),  &
-     &                       rhs(1,i,jsize,k,c) )
+      &                       rhs(1,i,jsize,k,c) )
 
             endif
          enddo
@@ -838,4 +838,5 @@
       end
       
 
-
+         
+         
